@@ -1,0 +1,17 @@
+{
+  "name": "vue-graphql",
+  "version": "1.0.0",
+  "description": "area restrita",
+  "main": "serve.js",
+  "scripts": {
+    "start": "nodemon --ext js,graphql"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^2.5.0",
+    "graphql": "^14.3.1",
+    "graphql-import": "^0.7.1",
+    "nodemon": "^1.19.1"
+  }
+}

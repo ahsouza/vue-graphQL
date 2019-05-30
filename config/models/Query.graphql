@@ -1,0 +1,6 @@
+# Consultas GraphQL
+type Query {
+  hourNow: String!
+  userLogged: User
+  productSpotlight: Product
+}
