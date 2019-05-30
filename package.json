@@ -4,9 +4,9 @@
   "description": "area restrita",
   "main": "serve.js",
   "scripts": {
-    "start": "nodemon --ext js,graphql"
+    "start": "nodemon --ext js, graphql"
   },
-  "author": "",
+  "author": "@ahsouza",
   "license": "ISC",
   "dependencies": {
     "apollo-server": "^2.5.0",
