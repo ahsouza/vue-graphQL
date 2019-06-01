@@ -1,12 +1,13 @@
 version: '3'
   services:
-
   #################################
   ####  SISTEMAS OPERACIONAIS  ####
   #################################
     creci_es:
       container_name: creci_es_ubuntu
-      build: .
+      env_file: ./creci_es:.env
+      image: ubuntu:16.04
+      #build: .
       ports:
         - "8080:80"
       command: npm run start
@@ -17,15 +18,28 @@ version: '3'
         - redis
         - mysqlserv
 
+    creci_es_parrot:
+      container_name: creci_es_parrot
+      env_file: ./creci_es:.env
+      image: parrotsec/parrot-core:4.6
+    #  build: .
+      ports:
+       - "8080:80"
+      volumes:
+        - .:/usr/creci_es
+      links:
+        - mongo
+        - redis
+        - mysqlserv  
+      command: echo 'hello world!'
+
+
     tasks:
       container_name: tarefas_automatizadas
       build: .
       command: npm run test
       volumes:
         - .:/usr/creci_es
-
-
-
   #################################
   #########  DATABASES  ###########
   #################################
@@ -34,10 +48,18 @@ version: '3'
     mysqlserv:
       image: mysql:5.7
       environment:
+        # Credenciais para o MySQL Server
+        MYSQL_USER: "crecies"
+        MYSQL_PASSWORD: "creci123creci"
         MYSQL_ROOT_PASSWORD: "creci123creci"
         MYSQL_DATABASE: "creci_es"
       ports:
-        - "3306:3306"
+        # Porta exposta:MySQL porta sendo executada dentro do container
+        - '3306:3306'
+      expose:
+        # Abra a porta 3306 do container
+        - '3306'
+        # Local dos dados que serão persistidos
       volumes:
         - ./data:/var/lib/mysql
 
@@ -45,24 +67,25 @@ version: '3'
     oracle:
       image: oracle/database:latest
       environment:
+        # Credenciais para o Oracle Database
         - ORACLE_SID= xyz
         - ORACLE_PDB= test
-      volumes:
-        - ./oracle/oradata:/opt/oracle/oradata #persist oracle database data.
-        - ./data-bridge:/data-bridge  
       ports: 
         - 1521:1521
         - 8080:8080
         - 5500:5500    
+      volumes:
+        - ./oracle/oradata:/opt/oracle/oradata #persist oracle database data.
+        - ./data-bridge:/data-bridge  
 
   ####### MONGO ######
     mongo:
       container_name: mongo_creci_es
       image: mongo
-      volumes:
-        - ./data:/mongo/db
       ports:
         - "27017:27017"
+      volumes:
+        - ./data:/mongo/db
   
   ####### REDIS ######
     redis:
@@ -84,13 +107,8 @@ version: '3'
         - 80:80
       environment:
         - PMA_ARBITRARY=1
-
-    #creci_es/parrot:
-    #  container_name: creci_es_parrot
-    #  build: .
-    #  ports:
-    #    - "8080:80"
-    #  command: npm run start
+      expose:
+        - '8080'
     
     #creci_es/rhel:
     #  container_name: creci_es_rhel
