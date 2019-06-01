@@ -1,6 +1,101 @@
 version: '3'
   services:
-    creci-es:
+
+  #################################
+  ####  SISTEMAS OPERACIONAIS  ####
+  #################################
+    creci_es:
+      container_name: creci_es_ubuntu
       build: .
       ports:
         - "8080:80"
+      command: npm run start
+      volumes:
+        - .:/usr/creci_es
+      links:
+        - mongo
+        - redis
+        - mysqlserv
+
+    tasks:
+      container_name: tarefas_automatizadas
+      build: .
+      command: npm run test
+      volumes:
+        - .:/usr/creci_es
+
+
+
+  #################################
+  #########  DATABASES  ###########
+  #################################
+
+  ####### MYSQL ######
+    mysqlserv:
+      image: mysql:5.7
+      environment:
+        MYSQL_ROOT_PASSWORD: "creci123creci"
+        MYSQL_DATABASE: "creci_es"
+      ports:
+        - "3306:3306"
+      volumes:
+        - ./data:/var/lib/mysql
+
+  ####### ORACLE ######
+    oracle:
+      image: oracle/database:latest
+      environment:
+        - ORACLE_SID= xyz
+        - ORACLE_PDB= test
+      volumes:
+        - ./oracle/oradata:/opt/oracle/oradata #persist oracle database data.
+        - ./data-bridge:/data-bridge  
+      ports: 
+        - 1521:1521
+        - 8080:8080
+        - 5500:5500    
+
+  ####### MONGO ######
+    mongo:
+      container_name: mongo_creci_es
+      image: mongo
+      volumes:
+        - ./data:/mongo/db
+      ports:
+        - "27017:27017"
+  
+  ####### REDIS ######
+    redis:
+      container_name: redis_creci_es
+      image: redis
+      volumes:
+        - ./data:/redis/db
+      ports:
+        - "6379:6379"
+
+  #############################
+  ###########  SGBD  ##########
+  #############################
+    phpmyadmin:
+      image: phpmyadmin/phpmyadmin:latest
+      links:
+        - mysqlserv
+      ports:
+        - 80:80
+      environment:
+        - PMA_ARBITRARY=1
+
+    #creci_es/parrot:
+    #  container_name: creci_es_parrot
+    #  build: .
+    #  ports:
+    #    - "8080:80"
+    #  command: npm run start
+    
+    #creci_es/rhel:
+    #  container_name: creci_es_rhel
+    #  build: .
+    #  ports:
+    #    - "8080:80"
+    #  command: npm run start
+        
