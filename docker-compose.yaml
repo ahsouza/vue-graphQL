@@ -8,6 +8,7 @@ version: '3'
       env_file: ./creci_es:.env
       image: ubuntu:16.04
       #build: .
+      network_mode: "bridge"
       ports:
         - "8080:80"
       command: npm run start
@@ -23,6 +24,7 @@ version: '3'
       env_file: ./creci_es:.env
       image: parrotsec/parrot-core:4.6
     #  build: .
+      network_mode: "bridge"
       ports:
        - "8080:80"
       volumes:
