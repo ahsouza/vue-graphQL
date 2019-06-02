@@ -8,7 +8,9 @@ version: '3'
       env_file: ./creci_es:.env
       image: ubuntu:16.04
       #build: .
-      network_mode: "bridge"
+      networks:
+        creci_net_1:
+          ipv4_address: 192.168.0.2
       ports:
         - "8080:80"
       command: npm run start
