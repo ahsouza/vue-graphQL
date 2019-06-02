@@ -3,7 +3,7 @@ version: '3'
   #################################
   ####  SISTEMAS OPERACIONAIS  ####
   #################################
-    creci_es:
+    creci_es_ubuntu:
       container_name: creci_es_ubuntu
       env_file: ./creci_es:.env
       image: ubuntu:16.04
@@ -15,6 +15,7 @@ version: '3'
       volumes:
         - .:/usr/creci_es
       links:
+        - oracle
         - mongo
         - redis
         - mysqlserv
@@ -23,17 +24,18 @@ version: '3'
       container_name: creci_es_parrot
       env_file: ./creci_es:.env
       image: parrotsec/parrot-core:4.6
-    #  build: .
+      #build: .
       network_mode: "bridge"
       ports:
        - "8080:80"
       volumes:
         - .:/usr/creci_es
+      command: echo 'hello world!'
       links:
+        - oracle
         - mongo
         - redis
         - mysqlserv  
-      command: echo 'hello world!'
 
 
     tasks:
@@ -42,6 +44,7 @@ version: '3'
       command: npm run test
       volumes:
         - .:/usr/creci_es
+
   #################################
   #########  DATABASES  ###########
   #################################
@@ -112,6 +115,27 @@ version: '3'
       expose:
         - '8080'
     
+#################################
+#########  NETWORKS   ###########
+#################################
+networks:
+  creci_net_1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.0.0/24
+          gateway: 192.168.0.1
+
+  creci_net_2:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.0.0/24
+          gateway: 172.16.0.1
+
+
     #creci_es/rhel:
     #  container_name: creci_es_rhel
     #  build: .
