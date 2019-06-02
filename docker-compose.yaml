@@ -1,121 +1,158 @@
-version: '3'
-  services:
+version: '3.3'
+
+services:
   #################################
   ####  SISTEMAS OPERACIONAIS  ####
+  creci_es_ubuntu:
+    container_name: creci_es_ubuntu
+    env_file: ./creci_es:.env
+    image: ubuntu:16.04
+    restart: always
+    #build: .
+    networks:
+      creci_net_1:
+        ipv4_address: 192.168.0.2
+    ports:
+      - "8080:80"
+    command: ["npm run start", "echo 'Welcome to CRECI-ES'"]
+    volumes:
+      - .:/usr/creci_es
+    links:
+      - oracle
+      - mongo
+      - redis
+      - mysqlserv
+
+  creci_es_parrot:
+    container_name: creci_es_parrot
+    env_file: ./creci_es:.env
+    image: parrotsec/parrot-core:4.6
+    #build:
+    # context: .
+    #  dockerfile: Dockerfile-alternative
+    #  args:
+    #    buildno: 1
+    #network_mode: "bridge"
+    networks:
+      creci_net_1:
+        ipv4_address: 192.168.0.3
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/usr/creci_es
+    command: echo 'Welcome to CRECI-ES!'
+    links:
+      - oracle
+      - mongo
+      - redis
+      - mysqlserv  
+  tasks:
+    container_name: tarefas_automatizadas
+    build: .
+    command: npm run test
+    volumes:
+      - .:/usr/creci_es
   #################################
-    creci_es_ubuntu:
-      container_name: creci_es_ubuntu
-      env_file: ./creci_es:.env
-      image: ubuntu:16.04
-      #build: .
-      networks:
-        creci_net_1:
-          ipv4_address: 192.168.0.2
-      ports:
-        - "8080:80"
-      command: npm run start
-      volumes:
-        - .:/usr/creci_es
-      links:
-        - oracle
-        - mongo
-        - redis
-        - mysqlserv
-
-    creci_es_parrot:
-      container_name: creci_es_parrot
-      env_file: ./creci_es:.env
-      image: parrotsec/parrot-core:4.6
-      #build: .
-      network_mode: "bridge"
-      ports:
-       - "8080:80"
-      volumes:
-        - .:/usr/creci_es
-      command: echo 'hello world!'
-      links:
-        - oracle
-        - mongo
-        - redis
-        - mysqlserv  
-
-
-    tasks:
-      container_name: tarefas_automatizadas
-      build: .
-      command: npm run test
-      volumes:
-        - .:/usr/creci_es
+  #########  WEB SERVER  ##########
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - creci_net_default
 
   #################################
   #########  DATABASES  ###########
-  #################################
 
   ####### MYSQL ######
-    mysqlserv:
-      image: mysql:5.7
-      environment:
-        # Credenciais para o MySQL Server
-        MYSQL_USER: "crecies"
-        MYSQL_PASSWORD: "creci123creci"
-        MYSQL_ROOT_PASSWORD: "creci123creci"
-        MYSQL_DATABASE: "creci_es"
-      ports:
-        # Porta exposta:MySQL porta sendo executada dentro do container
-        - '3306:3306'
-      expose:
-        # Abra a porta 3306 do container
-        - '3306'
-        # Local dos dados que serão persistidos
-      volumes:
-        - ./data:/var/lib/mysql
+  mysqlserv:
+    image: mysql:5.7
+    environment:
+      # Credenciais para o MySQL Server
+      MYSQL_USER: "crecies"
+      MYSQL_PASSWORD: "creci123creci"
+      MYSQL_ROOT_PASSWORD: "creci123creci"
+      MYSQL_DATABASE: "creci_es"
+    ports:
+      # Porta exposta:MySQL porta sendo executada dentro do container
+      - '3306:3306'
+    expose:
+      # Abra a porta 3306 do container
+      - '3306'
+      # Local dos dados que serão persistidos
+    volumes:
+      - ./data:/var/lib/mysql
 
   ####### ORACLE ######
-    oracle:
-      image: oracle/database:latest
-      environment:
-        # Credenciais para o Oracle Database
-        - ORACLE_SID= xyz
-        - ORACLE_PDB= test
-      ports: 
-        - 1521:1521
-        - 8080:8080
-        - 5500:5500    
-      volumes:
-        - ./oracle/oradata:/opt/oracle/oradata #persist oracle database data.
-        - ./data-bridge:/data-bridge  
+  oracle:
+    image: oracle/database:latest
+    environment:
+      # Credenciais para o Oracle Database
+      ORACLE_SID: xyz
+      ORACLE_PDB: test
+    ports: 
+      - 1521:1521
+      - 8080:8080
+      - 5500:5500    
+    volumes:
+      - ./oracle/oradata:/opt/oracle/oradata #persist oracle database data.
+      - ./data-bridge:/data-bridge  
 
   ####### MONGO ######
-    mongo:
-      container_name: mongo_creci_es
-      image: mongo
-      ports:
-        - "27017:27017"
-      volumes:
-        - ./data:/mongo/db
+  mongo:
+    container_name: mongo_creci_es
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/mongo/db
   
   ####### REDIS ######
-    redis:
-      container_name: redis_creci_es
-      image: redis
-      volumes:
-        - ./data:/redis/db
-      ports:
-        - "6379:6379"
+  redis:
+    container_name: redis_creci_es
+    image: redis:alpine
+    deploy:
+      replicas: 6
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - ./data:/redis/db
+    ports:
+      - "6379:6379"
 
   #############################
-  ###########  SGBD  ##########
-  #############################
-    phpmyadmin:
-      image: phpmyadmin/phpmyadmin:latest
-      links:
-        - mysqlserv
-      ports:
-        - 80:80
-      environment:
-        - PMA_ARBITRARY=1
-      expose:
-        - '8080'
+  ###########  SGBDS ##########
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    links:
+      - mysqlserv
+    ports:
+      - 80:80
+    environment:
+      - PMA_ARBITRARY=1
+    expose:
+      - '8080'
+
+  adminer:
+    image: adminer
+    links:
+      - mysqlserv
+    ports:
+      - 8181:8080
+    #expose:
+    #  - '8282'
+    networks:
+      - creci_net_2
     
 #################################
 #########  NETWORKS   ###########
@@ -137,7 +174,12 @@ networks:
         - subnet: 172.16.0.0/24
           gateway: 172.16.0.1
 
+  creci_net_default:
+    driver: bridge
 
+#################################
+#########  VOLUMES   ###########
+#################################
     #creci_es/rhel:
     #  container_name: creci_es_rhel
     #  build: .
