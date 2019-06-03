@@ -1,31 +1,55 @@
 version: '3.3'
 
 services:
-  #################################
-  ####  SISTEMAS OPERACIONAIS  ####
+#################################
+#####    APLICAÇÃO WEB   ########
+#################################
+  # app:
+  #   container_name: app
+  #   restart: always
+  #   build: ./app/
+  #   ports:
+  #     - '3000':'3000'
+  #   links:
+  #     - mongo  
+  #   depends_on:
+  #     - mongo
+  #   command: npm start  
+
+
+
+#################################
+####  SISTEMAS OPERACIONAIS  ####
+#################################
+  #------------#
+  #   UBUNTU   #
+  #------------#
   creci_es_ubuntu:
-    container_name: creci_es_ubuntu
-    env_file: ./creci_es:.env
+    container_name: ubuntu_creci_es
+    # env_file: ./creci_es:.env
     image: ubuntu:16.04
     restart: always
     #build: .
     networks:
-      creci_net_1:
-        ipv4_address: 192.168.0.2
+      - creci_net_default
+      # creci_net_1:
+      #   ipv4_address: 192.168.0.2
     ports:
       - "8080:80"
-    command: ["npm run start", "echo 'Welcome to CRECI-ES'"]
+    command: "echo 'Welcome to CRECI-ES'"
     volumes:
       - .:/usr/creci_es
     links:
-      - oracle
       - mongo
       - redis
+      - nginx
       - mysqlserv
-
+  #------------#
+  #   PARROT   #
+  #------------#
   creci_es_parrot:
-    container_name: creci_es_parrot
-    env_file: ./creci_es:.env
+    container_name: parro_creci_es
+    # env_file: ./creci_es:.env
     image: parrotsec/parrot-core:4.6
     #build:
     # context: .
@@ -34,26 +58,33 @@ services:
     #    buildno: 1
     #network_mode: "bridge"
     networks:
-      creci_net_1:
-        ipv4_address: 192.168.0.3
+      - creci_net_default
+      # creci_net_1:
+      #   ipv4_address: 192.168.0.3
     ports:
       - "8080:80"
     volumes:
       - .:/usr/creci_es
     command: echo 'Welcome to CRECI-ES!'
     links:
-      - oracle
       - mongo
       - redis
       - mysqlserv  
+  #------------#
+  #    TASKS   #
+  #------------#    
   tasks:
     container_name: tarefas_automatizadas
     build: .
     command: npm run test
     volumes:
       - .:/usr/creci_es
-  #################################
-  #########  WEB SERVER  ##########
+#################################
+########  SERVIDORES WEB ########
+#################################
+  #------------#
+  #    NGINX   #
+  #------------#
   nginx:
     image: nginx:alpine
     container_name: nginx
@@ -68,12 +99,15 @@ services:
     networks:
       - creci_net_default
 
-  #################################
-  #########  DATABASES  ###########
-
-  ####### MYSQL ######
+#################################
+#######  BANCO DE DADOS  ########
+#################################
+  #------------#
+  #    MYSQL   #
+  #------------#
   mysqlserv:
     image: mysql:5.7
+    container_name: mysqlserv
     environment:
       # Credenciais para o MySQL Server
       MYSQL_USER: "crecies"
@@ -89,25 +123,11 @@ services:
       # Local dos dados que serão persistidos
     volumes:
       - ./data:/var/lib/mysql
-
-  ####### ORACLE ######
-  oracle:
-    image: oracle/database:latest
-    environment:
-      # Credenciais para o Oracle Database
-      ORACLE_SID: xyz
-      ORACLE_PDB: test
-    ports: 
-      - 1521:1521
-      - 8080:8080
-      - 5500:5500    
-    volumes:
-      - ./oracle/oradata:/opt/oracle/oradata #persist oracle database data.
-      - ./data-bridge:/data-bridge  
-
-  ####### MONGO ######
+  #------------#
+  #    MONGO   #
+  #------------#
   mongo:
-    container_name: mongo_creci_es
+    container_name: mongo
     image: mongo
     restart: always
     ports:
@@ -120,6 +140,7 @@ services:
 
   mongo-express:
     image: mongo-express
+    container_name: mongo_express
     restart: always
     ports:
       - 8081:8081
@@ -127,9 +148,11 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: crecies
       ME_CONFIG_MONGODB_ADMINPASSWORD: admin123admin
   
-  ####### REDIS ######
+  #------------#
+  #    REDIS   #
+  #------------#
   redis:
-    container_name: redis_creci_es
+    container_name: redis
     image: redis:alpine
     deploy:
       replicas: 6
@@ -142,11 +165,19 @@ services:
       - ./data:/redis/db
     ports:
       - "6379:6379"
+  #---------------#
+  #    POSTGRES   #
+  #---------------#    
 
-  #############################
-  ###########  SGBDS ##########
+#############################
+###########  SGBDS ##########
+#############################
+  #------------#
+  # PHPMYADMIN #
+  #------------#
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
     links:
       - mysqlserv
     ports:
@@ -155,9 +186,12 @@ services:
       - PMA_ARBITRARY=1
     expose:
       - '8080'
-
+  #------------#
+  #  ADMINER   #
+  #------------#    
   adminer:
     image: adminer
+    container_name: adminer
     links:
       - mysqlserv
     ports:
@@ -165,34 +199,94 @@ services:
     #expose:
     #  - '8282'
     networks:
-      - creci_net_2
+      - creci_net_default
+############################
+#######     CMS     ########
+############################      
+  #------------#
+  #  WORDPRESS #
+  #------------#    
+  wordpress:
+    depends_on:
+      - mysqlserv
+    image: wordpress:5.1.1-fpm-alpine
+    container_name: wordpress
+    restart: unless-stopped
+    # env_file: .env
+    environment:
+      WORDPRESS_DB_HOST: crecies
+      WORDPRESS_DB_USER: crecies
+      WORDPRESS_DB_PASSWORD: creci123creci
+      WORDPRESS_DB_NAME: crecies_db
+    volumes:
+      - wordpress:/var/www/html  
+    networks:
+      - creci_net_default
+    links:
+      - mysqlserv
+    ports:
+      - 8080:80
+  #-------------------#
+  #  WEB SERVER P/ WP #
+  #-------------------#    
+  webserver_wp:
+    depends_on:
+      - wordpress
+    image: nginx:1.15.12-alpine
+    container_name: webserver_wp
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - wordpress:/var/www/html
+      - ./nginx-conf:/etc/nginx/conf.d
+      - certbot:/etc/letsencrypt
+    networks:
+      - creci_net_default    
     
 #################################
 #########  NETWORKS   ###########
 #################################
 networks:
-  creci_net_1:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 192.168.0.0/24
-          gateway: 192.168.0.1
+  # creci_net_1:
+  #   driver: bridge
+  #   ipam:
+  #     driver: default
+  #     config:
+  #       - subnet: 192.168.0.0/24
+  #       - gateway: 192.168.0.1
 
-  creci_net_2:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.0.0/24
-          gateway: 172.16.0.1
+  # creci_net_2:
+  #   driver: bridge
+  #   ipam:
+  #     driver: default
+  #     config:
+  #       - subnet: 172.16.0.0/24
+  #       - gateway: 172.16.0.1
 
   creci_net_default:
     driver: bridge
 
 #################################
-#########  VOLUMES   ###########
+#########  SEGURANÇA   ###########
 #################################
+  # certbot:
+  #   depends_on:
+  #     - nginx
+  #   image: certbot/certbot
+  #   container_name: certbot
+  #   volumes:
+  #     - certbot:/etc/letsencrypt
+  #     - wordpress:/var/www/html
+  #   command: certonly --webroot --webroot-path=/var/www/html --email sammy@example.com --agree-tos --no-eff-email --staging -d example.com -d www.example.com  
+
+#################################
+#########  VOLUMES    ###########
+#################################
+volumes:
+  certbot:
+  wordpress:
+  db:  
     #creci_es/rhel:
     #  container_name: creci_es_rhel
     #  build: .

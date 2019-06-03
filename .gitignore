@@ -1,4 +1,8 @@
 .DS_Store
+nginx
+data
+.idea
+package-lock.json
 # Logs
 logs
 *.log
