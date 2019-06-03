@@ -1,8 +1,5 @@
 # Consultas GraphQL
 type Query {
-  hourNow: String!
-  productSpotlight: Product
-  userLogged: User
   users: [User]
   user(id: Int): User
   profiles: [Profile]
