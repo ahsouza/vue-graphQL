@@ -1,6 +1,10 @@
 # Consultas GraphQL
 type Query {
   hourNow: String!
-  userLogged: User
   productSpotlight: Product
+  userLogged: User
+  users: [User]
+  user(id: Int): User
+  profiles: [Profile]
+  profile(id: Int): Profile
 }

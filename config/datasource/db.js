@@ -1,5 +1,5 @@
 // Modelo para tipos de perfil do usuário
-const profile = [
+const profiles = [
   {id: 1, name: 'visitante'},
   {id: 2, name: 'administrador'}
 ]
@@ -18,7 +18,7 @@ const users = [
     name: 'Diana Prince',
     email: 'wonderwoman@universe.com',
     age: 26,
-    profile_id: 2,
+    profile_id: 1,
     status: 'INACTIVE'
   },
   {
@@ -30,3 +30,5 @@ const users = [
     status: 'LOCKED'
   }
 ]
+
+module.exports  = {users, profiles}
