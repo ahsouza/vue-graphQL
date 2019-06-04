@@ -4,13 +4,13 @@ services:
     container_name: spa
     hostname: spa
     build:
-      context: ./app/spa
+      context: ./app/spa/creci
       dockerfile: dev.dockerfile
     volumes:
       - ./app/spa:/usr/spa
       - /usr/spa/node_modules
     ports:
-      - '3232:3000'
+      - '3232:5000'
     environment:
       - PORT=3000
       - NODE_ENV=development
