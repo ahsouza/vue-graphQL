@@ -1,16 +1,63 @@
 version: '2'
 services:
+  # FRONT-END DEVELOP
   spa:
     container_name: spa
     hostname: spa
     build:
-      context: ./app/spa/creci
+      context: ./apps/spa/creci
       dockerfile: dev.dockerfile
     volumes:
-      - ./app/spa:/usr/spa
+      - ./apps/spa:/usr/spa
       - /usr/spa/node_modules
     ports:
       - '3232:5000'
     environment:
       - PORT=3000
+      - NODE_ENV=development  
+
+  # BACK-END DEVELOP
+  api:
+    container_name: api
+    hostname: api
+    build:
+      context: ./apps/api/
+      dockerfile: dev.dockerfile
+    volumes:
+      - ./apps/api:/usr/api
+      - /usr/api/node_modules
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=3000
       - NODE_ENV=development
+    links:
+      - mongo
+      - mysql
+      - redis
+  #database_mysql
+  mysql:
+    container_name: mysql
+    build:
+      context: ./services/mysql    
+
+  #database_mongo
+  mongo:
+    container_name: mongodb
+    build:
+      context: ./services/mongo
+      dockerfile: Dockerfile
+  
+  #database_redis    
+  redis:
+    container_name: redis
+    build:
+      context: ./services/redis
+      dockerfile: Dockerfile    
+
+  #proxy  
+  nginx:
+    container_name: nginx
+    build:
+      context: ./services/nginx
+      dockerfile: Dockerfile    
