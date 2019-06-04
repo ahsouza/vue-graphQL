@@ -1,0 +1,16 @@
+version: '2'
+services:
+  spa:
+    container_name: spa
+    hostname: spa
+    build:
+      context: ./app/spa
+      dockerfile: dev.dockerfile
+    volumes:
+      - ./app/spa:/usr/spa
+      - /usr/spa/node_modules
+    ports:
+      - '3232:3000'
+    environment:
+      - PORT=3000
+      - NODE_ENV=development

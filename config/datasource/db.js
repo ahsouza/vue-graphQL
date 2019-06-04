@@ -14,7 +14,7 @@ const users = [
     status: 'ACTIVE'
   },
   {
-    id: 1,
+    id: 2,
     name: 'Diana Prince',
     email: 'wonderwoman@universe.com',
     age: 26,
@@ -22,7 +22,7 @@ const users = [
     status: 'INACTIVE'
   },
   {
-    id: 1,
+    id: 3,
     name: 'Bruce Wayne',
     email: 'batman@universe.com',
     age: 26,

@@ -1,0 +1,9 @@
+npm-debug.log
+Dockerfile
+dev.dockerfile
+.DS_Store
+node_modules/
+config/
+data/
+nginx/
+.idea
