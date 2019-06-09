@@ -34,7 +34,7 @@ services:
       # creci_net_1:
       #   ipv4_address: 192.168.0.2
     ports:
-      - "8080:80"
+      - "8181:80"
     command: "echo 'Welcome to CRECI-ES'"
     volumes:
       - .:/usr/creci_es
