@@ -1,0 +1,69 @@
+version: '3.3'
+
+services:
+#################################
+#####    APLICAÇÃO WEB   ########
+#################################
+  # app:
+  #   container_name: app
+  #   restart: always
+  #   build: ./app/
+  #   ports:
+  #     - '3000':'3000'
+  #   links:
+  #     - mongo  
+  #   depends_on:
+  #     - mongo
+  #   environment:
+  #     MONGODB_URL: mongodb://crecies@crecies/database
+  #   command: npm start  
+#################################
+####  SISTEMAS OPERACIONAIS  ####
+#################################
+  #------------#
+  #   UBUNTU   #
+  #------------#
+  creci_es_ubuntu:
+    container_name: ubuntu_creci_es
+    # env_file: ./creci_es:.env
+    build: 
+      context: ./services/ubuntu/18.04
+      dockerfile: Dockerfile
+    networks:
+      - creci_net_default
+      # creci_net_1:
+      #   ipv4_address: 192.168.0.2
+    ports:
+      - "8282:80"
+    command: "echo 'Welcome to LARACRECI'"
+    volumes:
+      - .:/usr/creci_es
+#################################
+#########  NETWORKS   ###########
+#################################
+networks:
+  creci_net_default:
+    driver: bridge
+
+#################################
+#########  SEGURANÇA   ###########
+#################################
+  # certbot:
+  #   depends_on:
+  #     - nginx
+  #   image: certbot/certbot
+  #   container_name: certbot
+  #   volumes:
+  #     - certbot:/etc/letsencrypt
+  #     - wordpress:/var/www/html
+  #   command: certonly --webroot --webroot-path=/var/www/html --email sammy@example.com --agree-tos --no-eff-email --staging -d example.com -d www.example.com  
+
+#################################
+#########  VOLUMES    ###########
+#################################
+volumes:
+  certbot:
+  wordpress:
+  laravel:
+  adonis:
+  oracle_db:
