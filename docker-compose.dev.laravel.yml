@@ -1,49 +1,33 @@
 version: '3.3'
 
 services:
-  waf:
-    build:
-      context: ./services/waf
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-#################################
-#####    APLICAÇÃO WEB   ########
-#################################
-  # app:
-  #   container_name: app
-  #   restart: always
-  #   build: ./app/
-  #   ports:
-  #     - '3000':'3000'
-  #   links:
-  #     - mongo  
-  #   depends_on:
-  #     - mongo
-  #   environment:
-  #     MONGODB_URL: mongodb://crecies@crecies/database
-  #   command: npm start  
-#################################
-####  SISTEMAS OPERACIONAIS  ####
-#################################
-  #------------#
-  #   UBUNTU   #
-  #------------#
-  creci_es_ubuntu:
-    container_name: ubuntu_creci_es
-    # env_file: ./creci_es:.env
-    build: 
-      context: ./services/ubuntu/18.04
-      dockerfile: Dockerfile
+  app:
+    build: .
+    container_name: app
+    volumes:
+      - .:/var/www
     networks:
       - creci_net_default
-      # creci_net_1:
-      #   ipv4_address: 192.168.0.2
+
+  nginx:
+    build: .services/waf
+    container_name: nginx
+    restart: always
+    tty: true
     ports:
-      - "8282:80"
-    command: "echo 'Welcome to LARACRECI'"
-    volumes:
-      - .:/usr/creci_es
+      - "8000:80"
+    volumes: .:/var/www
+    networks:
+      - creci_net_default
+
+  redis:
+    image: redis:alpine
+    restart: always
+    expose:
+      - 6379
+    networks:
+      - creci_net_default
+
 #################################
 #########  NETWORKS   ###########
 #################################
@@ -67,9 +51,7 @@ networks:
 #################################
 #########  VOLUMES    ###########
 #################################
-volumes:
-  certbot:
-  wordpress:
-  laravel:
-  adonis:
-  oracle_db:
+# volumes:
+#   certbot:
+#   wordpress:
+#   oracle_db:
